@@ -1,7 +1,4 @@
 
-scomadmin.pw - *** DO NOT INCLUDE when distributing.***
-
-
 CryptPassword.exe - used to create password file
 					-e password -- will encrypt password and store in file enpw	
 					-d          -- will decrypt the file enpw
