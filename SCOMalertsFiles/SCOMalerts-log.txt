@@ -1,0 +1,19 @@
+3/20/2018 2:03:03 PM 127772797: Key: help	Value: true
+3/20/2018 2:06:11 PM 168280576: Key: svr	Value: scomtest.domain.net
+3/20/2018 2:06:11 PM 168280576: Key: level	Value: 4
+3/20/2018 2:06:11 PM 168280576: Key: msg	Value: TEST 8100 message
+3/20/2018 2:06:11 PM 168280576: Key: eventNumber	Value: 8100
+3/20/2018 2:06:11 PM 168280576: Beginning to create SCOM event
+3/20/2018 2:06:11 PM 168280576: Node: scomtest.domain.net   Level: 4  Alert: TEST 8100 message
+3/20/2018 2:06:11 PM 168280576: Connecting to the SDK Service as user: scomadmin on server: scomserver.domain.net pwd: System.Security.SecureString
+3/20/2018 2:06:11 PM 168280576: Connection succeeded.(1)
+3/20/2018 2:06:11 PM 168280576: Connected True  Name: OPSLAB
+3/20/2018 2:06:11 PM 168280576: Inserting custom event for scomtest.domain.net
+3/20/2018 2:06:21 PM 168280576: Error retrieving Node info or generating event the monitoring object was not found scomtest.domain.net
+3/20/2018 2:06:21 PM 168280576: Error connecting to SCOM Error retrieving Node info or generating event the monitoring object was not found scomtest.domain.net
+3/20/2018 2:07:59 PM 127210354: Key: help	Value: true
+3/20/2018 2:08:25 PM 187009184: Key: help	Value: true
+3/20/2018 2:08:45 PM 108738173: Key: svr	Value: scomtest.domain.net
+3/20/2018 2:08:45 PM 108738173: Key: level	Value: 4
+3/20/2018 2:08:45 PM 108738173: Key: msg	Value: TEST 8100 message
+3/20/2018 2:08:45 PM 108738173: Key: eventNumber	Value: 8100
