@@ -153,18 +153,6 @@ namespace SCOMalerts
                                 targets.AddRange(reader);
                                 loghandle.WriteOut("Retrieved Node Targets in SCOM");
                             }
-                            if (ObjType == "NetApp")
-                            {
-                                // Get all instances of network nodes from the management group
-                                ManagementPackClassCriteria NetClassCriteria = new ManagementPackClassCriteria("Name = 'WSH.NETAPP.Volume.Class'");
-                                IList<ManagementPackClass> monitoringClasses = mg.EntityTypes.GetClasses(NetClassCriteria);
-                                if (monitoringClasses.Count != 1)
-                                    throw new InvalidOperationException("Expected one monitoring class object for WSH.NETAPP.Volume.Class");
-                                //List<MonitoringObject> targets = new List<MonitoringObject>();
-                                IObjectReader<MonitoringObject> reader = mg.EntityObjects.GetObjectReader<MonitoringObject>(monitoringClasses[0], ObjectQueryOptions.Default);
-                                targets.AddRange(reader);
-                                loghandle.WriteOut("Retrieved Node Targets in SCOM");
-                            }
 
                             int MOIndex = 0;
                             if (targets.Count > 0)
@@ -196,7 +184,7 @@ namespace SCOMalerts
                             }
                             loghandle.WriteOut("Object index is : " + MOIndex);
                             // Generate alert for a specific node using --> CustomMonitoringEventMessage;
-                            CustomMonitoringEvent monitoringEvent = new CustomMonitoringEvent("WSH.Alert", EventNumber);
+                            CustomMonitoringEvent monitoringEvent = new CustomMonitoringEvent("Custom.Alert", EventNumber);
                             //CustomMonitoringEvent monitoringEvent = new CustomMonitoringEvent(fullAgentName, EventNumber);
                             monitoringEvent.Channel = "Application";
                             //monitoringEvent.LoggingComputer = fullAgentName;    // "AnyMachine";
@@ -281,7 +269,7 @@ namespace SCOMalerts
             int Level = int.Parse(MainArgs["level"]);
             int EventNumber = int.Parse(MainArgs["eventNumber"]);
             string Type = MainArgs["type"];
-            if (Type == "Windows" || Type == "Unix" || Type == "Node" || Type == "NetApp")
+            if (Type == "Windows" || Type == "Unix" || Type == "Node")
             {
                 loghandle.WriteOut("Found a valid node type: "+Type);
             } else
@@ -317,7 +305,7 @@ The Command Options are as Follows:
     -msg    - Alert detail to be displayed
     -level  - 1, 2 4 (critical, Warning, Informational)
     -eventNumber - 8100 for testing
-    -type   - is the server type.  Valid: Node, Windows, Unix, NetApp.  Default or incorrect is Node
+    -type   - is the server type.  Valid: Node, Windows, Unix.  Default or incorrect is Node
 
  *the parameters are case sensitive.
             ";

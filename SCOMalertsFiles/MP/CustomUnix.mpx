@@ -1,0 +1,115 @@
+<ManagementPackFragment SchemaVersion="2.0"
+    xmlns:xsd = "http://www.w3.org/2001/XMLSchema">
+  <!--
+%%
+Description:
+
+Version: 1.0
+LastModified: 18-May-2021
+%%
+
+In this fragment you need to replace:
+##ClassID## MUL!Microsoft.Unix.Computer
+
+This fragment depends on references:
+  RequiredReference: Alias="System", ID="System.Library", Version="7.5.8501.0"
+  RequiredReference: Alias="SCLibrary", ID="Microsoft.SystemCenter.Library", Version="7.0.8443.6"
+  RequiredReference: Alias="Health", ID="System.Health.Library", Version="7.0.8443.6"
+  RequiredReference: Alias="MUL", ID="Microsoft.Unix.Library", Version="10.19.1123.0"
+-->
+  <Monitoring>
+    <Rules>
+      <Rule ID="Custom.AlertOnEventForUnix8100"
+          Enabled="true"
+          Target="##ClassID##"
+          ConfirmDelivery="false"
+          Remotable="true"
+          Priority="Normal"
+          DiscardLevel="100">
+        <Category>Alert</Category>
+        <DataSources>
+          <DataSource ID="DataSource"
+              TypeID="SCLibrary!Microsoft.SystemCenter.TargetEntitySdkEventProvider" />
+        </DataSources>
+        <ConditionDetection ID="ConditionDetection"
+            TypeID="System!System.ExpressionFilter">
+          <Expression>
+            <And>
+              <Expression>
+                <RegExExpression>
+                  <ValueExpression>
+                    <XPathQuery>PublisherName</XPathQuery>
+                  </ValueExpression>
+                  <Operator>MatchesRegularExpression</Operator>
+                  <Pattern>Custom.Alert</Pattern>
+                </RegExExpression>
+              </Expression>
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery>EventNumber</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="String">8100</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </And>
+          </Expression>
+        </ConditionDetection>
+        <WriteActions>
+          <WriteAction ID="WriteAction"
+              TypeID="Health!System.Health.GenerateAlertForType">
+            <Priority>0</Priority>
+            <Severity>0</Severity>
+            <ManagedEntityTypeId>$MPElement[Name="MUL!Microsoft.Unix.Computer"]$</ManagedEntityTypeId>
+            <KeyProperties>
+              <KeyProperty>
+                <PropertyId>$MPElement[Name="MUL!Microsoft.Unix.Computer"]/PrincipalName$</PropertyId>
+                <IsCaseSensitive>false</IsCaseSensitive>
+                <Value>$Data/LoggingComputer$</Value>
+              </KeyProperty>
+            </KeyProperties>
+            <AlertOwner>8100</AlertOwner>
+            <AlertMessageId>$MPElement[Name="AlertMessageID_Unix_8100"]$</AlertMessageId>
+            <AlertParameters>
+              <AlertParameter1>$Data/EventDescription$</AlertParameter1>
+            </AlertParameters>
+          </WriteAction>
+        </WriteActions>
+      </Rule>
+    </Rules>
+  </Monitoring>
+  <Presentation>
+    <StringResources>
+      <StringResource ID="AlertMessageID_Unix_8100" />
+    </StringResources>
+  </Presentation>
+  <LanguagePacks>
+    <LanguagePack ID="ENU">
+      <DisplayStrings>
+        <DisplayString ElementID="AlertMessageID_Unix_8100">
+          <Name>Info ScomAlert via SDK event</Name>
+          <Description>{0}</Description>
+        </DisplayString>
+        <DisplayString ElementID="Custom.AlertOnEventForUnix8100">
+          <Name>Custom.AlertOnEventForUnix 8100</Name>
+          <Description>PublisherName: Custom.Alert   EventNumber : 8100    Level: 3 Information</Description>
+        </DisplayString>
+        <DisplayString ElementID="Custom.AlertOnEventForUnix8100"
+            SubElementID="ConditionDetection">
+          <Name>ConditionDetection</Name>
+        </DisplayString>
+        <DisplayString ElementID="Custom.AlertOnEventForUnix8100"
+            SubElementID="DataSource">
+          <Name>Target Entity SDK Event Data Provider</Name>
+        </DisplayString>
+        <DisplayString ElementID="Custom.AlertOnEventForUnix8100"
+            SubElementID="WriteAction">
+          <Name>WriteAction</Name>
+        </DisplayString>
+      </DisplayStrings>
+    </LanguagePack>
+  </LanguagePacks>
+</ManagementPackFragment>

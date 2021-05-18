@@ -1,0 +1,272 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ManagementPack ContentReadable="true" SchemaVersion="2.0" OriginalSchemaVersion="1.1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+	<Manifest>
+		<Identity>
+			<ID>Custom.Event.Alert</ID>
+			<Version>1.0.0.6</Version>
+		</Identity>
+		<Name>Custom Event Alert</Name>
+		<References>
+			<Reference Alias="SCInternal">
+				<ID>Microsoft.SystemCenter.Internal</ID>
+				<Version>7.0.8443.6</Version>
+				<PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+			</Reference>
+			<Reference Alias="SCLibrary">
+				<ID>Microsoft.SystemCenter.Library</ID>
+				<Version>7.0.8443.6</Version>
+				<PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+			</Reference>
+			<Reference Alias="Windows">
+				<ID>Microsoft.Windows.Library</ID>
+				<Version>7.5.8501.0</Version>
+				<PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+			</Reference>
+			<Reference Alias="Health">
+				<ID>System.Health.Library</ID>
+				<Version>7.0.8443.6</Version>
+				<PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+			</Reference>
+			<Reference Alias="System">
+				<ID>System.Library</ID>
+				<Version>7.5.8501.0</Version>
+				<PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+			</Reference>
+			<Reference Alias="Performance">
+				<ID>System.Performance.Library</ID>
+				<Version>7.0.8443.6</Version>
+				<PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+			</Reference>
+			<Reference Alias="MUL">
+				<ID>Microsoft.Unix.Library</ID>
+				<Version>7.6.1064.0</Version>
+				<PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+			</Reference>
+			<Reference Alias="Network">
+				<ID>System.NetworkManagement.Library</ID>
+				<Version>7.2.11719.0</Version>
+				<PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+			</Reference>
+		</References>
+	</Manifest>
+	<Monitoring>
+		<Rules>
+			<Rule ID="Custom.AlertOnEventForComputer8100" Comment="&lt;Silect&gt;&lt;Op&gt;Edited&lt;/Op&gt;&lt;User&gt;YHSMASTER\dsmith14admin&lt;/User&gt;&lt;Previous&gt;Enabled=false&lt;/Previous&gt;&lt;LastModified&gt;2021-05-18 17:43:50Z&lt;/LastModified&gt;&lt;/Silect&gt;" Enabled="true" Target="Windows!Microsoft.Windows.Computer" ConfirmDelivery="false" Remotable="true" Priority="Normal" DiscardLevel="100">
+				<Category>Alert</Category>
+				<DataSources>
+					<DataSource ID="DataSource" TypeID="SCLibrary!Microsoft.SystemCenter.SdkEventProvider" />
+				</DataSources>
+				<ConditionDetection ID="ConditionDetection" TypeID="System!System.ExpressionFilter">
+					<Expression>
+						<And>
+							<Expression>
+								<RegExExpression>
+									<ValueExpression>
+										<XPathQuery>PublisherName</XPathQuery>
+									</ValueExpression>
+									<Operator>MatchesRegularExpression</Operator>
+									<Pattern>Custom.Alert</Pattern>
+								</RegExExpression>
+							</Expression>
+							<Expression>
+								<SimpleExpression>
+									<ValueExpression>
+										<XPathQuery>EventNumber</XPathQuery>
+									</ValueExpression>
+									<Operator>Equal</Operator>
+									<ValueExpression>
+										<Value Type="String">8100</Value>
+									</ValueExpression>
+								</SimpleExpression>
+							</Expression>
+						</And>
+					</Expression>
+				</ConditionDetection>
+				<WriteActions>
+					<WriteAction ID="WriteAction" TypeID="Health!System.Health.GenerateAlertForType">
+						<Priority>0</Priority>
+						<Severity>0</Severity>
+						<ManagedEntityTypeId>$MPElement[Name="Windows!Microsoft.Windows.Computer"]$</ManagedEntityTypeId>
+						<KeyProperties>
+							<KeyProperty>
+								<PropertyId>$MPElement[Name="Windows!Microsoft.Windows.Computer"]/PrincipalName$</PropertyId>
+								<IsCaseSensitive>false</IsCaseSensitive>
+								<Value>$Data/LoggingComputer$</Value>
+							</KeyProperty>
+						</KeyProperties>
+						<AlertMessageId>$MPElement[Name="AlertMessageID_8100"]$</AlertMessageId>
+						<AlertParameters>
+							<AlertParameter1>$Data/EventDescription$</AlertParameter1>
+							<AlertParameter2>$Data/LoggingComputer$</AlertParameter2>
+						</AlertParameters>
+						<Custom4>$Data/LoggingComputer$</Custom4>
+					</WriteAction>
+				</WriteActions>
+			</Rule>
+			<Rule ID="Custom.AlertOnEventForNode8100" Enabled="true" Target="Network!System.NetworkManagement.Node" ConfirmDelivery="false" Remotable="true" Priority="Normal" DiscardLevel="100">
+				<Category>Alert</Category>
+				<DataSources>
+					<DataSource ID="DataSource" TypeID="SCLibrary!Microsoft.SystemCenter.TargetEntitySdkEventProvider" />
+				</DataSources>
+				<ConditionDetection ID="ConditionDetection" TypeID="System!System.ExpressionFilter">
+					<Expression>
+						<And>
+							<Expression>
+								<RegExExpression>
+									<ValueExpression>
+										<XPathQuery>PublisherName</XPathQuery>
+									</ValueExpression>
+									<Operator>MatchesRegularExpression</Operator>
+									<Pattern>Custom.Alert</Pattern>
+								</RegExExpression>
+							</Expression>
+							<Expression>
+								<SimpleExpression>
+									<ValueExpression>
+										<XPathQuery>EventNumber</XPathQuery>
+									</ValueExpression>
+									<Operator>Equal</Operator>
+									<ValueExpression>
+										<Value Type="String">8100</Value>
+									</ValueExpression>
+								</SimpleExpression>
+							</Expression>
+						</And>
+					</Expression>
+				</ConditionDetection>
+				<WriteActions>
+					<WriteAction ID="WriteAction" TypeID="Health!System.Health.GenerateAlert">
+						<Priority>0</Priority>
+						<Severity>0</Severity>
+						<AlertOwner>8100</AlertOwner>
+						<AlertMessageId>$MPElement[Name="AlertMessageID_Node_8100"]$</AlertMessageId>
+						<AlertParameters>
+							<AlertParameter1>$Data/EventDescription$</AlertParameter1>
+						</AlertParameters>
+					</WriteAction>
+				</WriteActions>
+			</Rule>
+			<Rule ID="Custom.AlertOnEventForUnix8100" Enabled="true" Target="MUL!Microsoft.Unix.Computer" ConfirmDelivery="false" Remotable="true" Priority="Normal" DiscardLevel="100">
+				<Category>Alert</Category>
+				<DataSources>
+					<DataSource ID="DataSource" TypeID="SCLibrary!Microsoft.SystemCenter.TargetEntitySdkEventProvider" />
+				</DataSources>
+				<ConditionDetection ID="ConditionDetection" TypeID="System!System.ExpressionFilter">
+					<Expression>
+						<And>
+							<Expression>
+								<RegExExpression>
+									<ValueExpression>
+										<XPathQuery>PublisherName</XPathQuery>
+									</ValueExpression>
+									<Operator>MatchesRegularExpression</Operator>
+									<Pattern>Custom.Alert</Pattern>
+								</RegExExpression>
+							</Expression>
+							<Expression>
+								<SimpleExpression>
+									<ValueExpression>
+										<XPathQuery>EventNumber</XPathQuery>
+									</ValueExpression>
+									<Operator>Equal</Operator>
+									<ValueExpression>
+										<Value Type="String">8100</Value>
+									</ValueExpression>
+								</SimpleExpression>
+							</Expression>
+						</And>
+					</Expression>
+				</ConditionDetection>
+				<WriteActions>
+					<WriteAction ID="WriteAction" TypeID="Health!System.Health.GenerateAlertForType">
+						<Priority>0</Priority>
+						<Severity>0</Severity>
+						<ManagedEntityTypeId>$MPElement[Name="MUL!Microsoft.Unix.Computer"]$</ManagedEntityTypeId>
+						<KeyProperties>
+							<KeyProperty>
+								<PropertyId>$MPElement[Name="MUL!Microsoft.Unix.Computer"]/PrincipalName$</PropertyId>
+								<IsCaseSensitive>false</IsCaseSensitive>
+								<Value>$Data/LoggingComputer$</Value>
+							</KeyProperty>
+						</KeyProperties>
+						<AlertOwner>8100</AlertOwner>
+						<AlertMessageId>$MPElement[Name="AlertMessageID_Unix_8100"]$</AlertMessageId>
+						<AlertParameters>
+							<AlertParameter1>$Data/EventDescription$</AlertParameter1>
+						</AlertParameters>
+					</WriteAction>
+				</WriteActions>
+			</Rule>
+		</Rules>
+	</Monitoring>
+	<Presentation>
+		<StringResources>
+			<StringResource ID="AlertMessageID_Unix_8100" />
+			<StringResource ID="AlertMessageID_Node_8100" />
+			<StringResource ID="AlertMessageID_8100" />
+		</StringResources>
+	</Presentation>
+	<LanguagePacks>
+		<LanguagePack ID="ENU" IsDefault="true">
+			<DisplayStrings>
+				<DisplayString ElementID="AlertMessageID_8100">
+					<Name>Info ScomAlert via SDK event</Name>
+					<Description>EventDescription: {0}
+          Logging Computer: {1}
+          </Description>
+				</DisplayString>
+				<DisplayString ElementID="AlertMessageID_Node_8100">
+					<Name>Info ScomAlert via SDK event</Name>
+					<Description>{0}</Description>
+				</DisplayString>
+				<DisplayString ElementID="AlertMessageID_Unix_8100">
+					<Name>Info ScomAlert via SDK event</Name>
+					<Description>{0}</Description>
+				</DisplayString>
+				<DisplayString ElementID="Custom.AlertOnEventForComputer8100">
+					<Name>Custom.AlertOnEventForComputer 8100</Name>
+					<Description>PublisherName: Custom.Alert   EventNumber : 8100    Level: 3 Information</Description>
+				</DisplayString>
+				<DisplayString ElementID="Custom.AlertOnEventForComputer8100" SubElementID="ConditionDetection">
+					<Name>ConditionDetection</Name>
+				</DisplayString>
+				<DisplayString ElementID="Custom.AlertOnEventForComputer8100" SubElementID="DataSource">
+					<Name>Target Entity SDK Event Data Provider</Name>
+				</DisplayString>
+				<DisplayString ElementID="Custom.AlertOnEventForComputer8100" SubElementID="WriteAction">
+					<Name>WriteAction</Name>
+				</DisplayString>
+				<DisplayString ElementID="Custom.AlertOnEventForNode8100">
+					<Name>Custom.AlertOnEventForNode 8100</Name>
+					<Description>PublisherName: Custom.Alert   EventNumber : 8100    Level: 3 Information</Description>
+				</DisplayString>
+				<DisplayString ElementID="Custom.AlertOnEventForNode8100" SubElementID="ConditionDetection">
+					<Name>ConditionDetection</Name>
+				</DisplayString>
+				<DisplayString ElementID="Custom.AlertOnEventForNode8100" SubElementID="DataSource">
+					<Name>Target Entity SDK Event Data Provider</Name>
+				</DisplayString>
+				<DisplayString ElementID="Custom.AlertOnEventForNode8100" SubElementID="WriteAction">
+					<Name>WriteAction</Name>
+				</DisplayString>
+				<DisplayString ElementID="Custom.AlertOnEventForUnix8100">
+					<Name>Custom.AlertOnEventForUnix 8100</Name>
+					<Description>PublisherName: Custom.Alert   EventNumber : 8100    Level: 3 Information</Description>
+				</DisplayString>
+				<DisplayString ElementID="Custom.AlertOnEventForUnix8100" SubElementID="ConditionDetection">
+					<Name>ConditionDetection</Name>
+				</DisplayString>
+				<DisplayString ElementID="Custom.AlertOnEventForUnix8100" SubElementID="DataSource">
+					<Name>Target Entity SDK Event Data Provider</Name>
+				</DisplayString>
+				<DisplayString ElementID="Custom.AlertOnEventForUnix8100" SubElementID="WriteAction">
+					<Name>WriteAction</Name>
+				</DisplayString>
+				<DisplayString ElementID="Custom.Event.Alert">
+					<Name>Custom Event Alert</Name>
+					<Description>Created for SCOM Events to generate Alerts</Description>
+				</DisplayString>
+			</DisplayStrings>
+		</LanguagePack>
+	</LanguagePacks>
+</ManagementPack>

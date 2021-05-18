@@ -1,4 +1,6 @@
 
+CommandLine.Utility.dll - custom DLL for handling command line parameters
+
 CryptPassword.exe - used to create password file
 					-e password -- will encrypt password and store in file enpw	
 					-d          -- will decrypt the file enpw
@@ -7,7 +9,7 @@ enpw - default password file
 
 README.txt - this file
 
-SCOMalerts.cs - code used to create the executable SCOMalerts.exe
+Program.cs - code used to create the executable SCOMalerts.exe
 
 SCOMalerts.exe - application that will generate an event in SCOM
 	If you run the code without any parameters the following message will be displayed
