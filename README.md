@@ -16,7 +16,7 @@ CryptPassowrd.exe is used to create the encrypted password to use with the scom 
 CryptPassword.dll is used by the CryptPassword.exe for creating the password
 
 ## Configure 
-The first thing to do is create a password for the SCOM account used for the event creation.  CryptPassword.exe -e <password> will create a file **enpw**.  Rename this file.  This file is need to configure the SCOMalerts.exe to run and connect to the SCOM management server.
+The first thing to do is create a password for the SCOM account used for the event creation.  CryptPassword.exe -e <password> will create a file **enpw**.  Rename this file.  This file is needed to configure the SCOMalerts.exe to run and connect to the SCOM management server.
   
 Next open the SCOMalerts.exe.config for editing.  This file containes the following information
 ```dos
