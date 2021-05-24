@@ -28,7 +28,7 @@ Next open the SCOMalerts.exe.config for editing.  This file containes the follow
 		key="debug" value="true"/>
 ```
 
-SCOMuser is the user account that corresponds to the password hat was created in the previous step.
+SCOMuser is the user account that corresponds to the password that was created in the previous step.
 
 SCOMpasswd is the password file created earlier.
 
