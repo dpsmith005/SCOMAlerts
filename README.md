@@ -49,6 +49,7 @@ SCOMalerts -svr <Server_generating_event> -msg "Test event message" -level 4 -ev
 
 ## SCOMalerts.exe Help
 
+```dos
 The Command Options are as Follows:
     -help --help /help -? --? /? - will display the help message.
     -svr    - FQDN of the server for the alert
@@ -58,3 +59,4 @@ The Command Options are as Follows:
     -type   - is the server type.  Valid: Node, Windows, Unix, NetApp.  Default or incorrect is Node
 
  *the parameters are case sensitive.
+```
