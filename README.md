@@ -4,9 +4,9 @@
 
 Uploaded the files.  Refer to the README.txt for description of the files.
 
-SCOMalerts.exe, SCOMalerts.exe.config, CommandLineUtility.sll, CryptPassword.exe, CryptPassword.dll are the only files need to generate an event in SCOM.
+SCOMalerts.exe, SCOMalerts.exe.config, CommandLineUtility.dll, CryptPassword.exe, CryptPassword.dll are the only files needed to generate an event in SCOM.
 
-SCOMalerts.exe -help will give the command line parameters need to generate the SCOM event.
+SCOMalerts.exe -help will give the command line parameters needed to generate the SCOM event.
 
 SCOMalerts.exe.config needs to be confiigured for your environment.
 
@@ -35,10 +35,26 @@ SCOMpasswd is the password file created earlier.
 
 SCOMServer is the management server fully qualified domain name.
 
+Once this is configured the application is ready to test.
+
 Domain is the AD domain where the management server resides.
 
 logfile is the location of the log file for debug and error messages to be written.
 
 debug value is set to true or false.  This enables logging debug information to the logfile.
 
-More details and instructions coming soon.
+## Test Event
+
+SCOMalerts -svr <Server_generating_event> -msg "Test event message" -level 4 -eventNumber 8100 -type Windows
+
+## SCOMalerts.exe Help
+
+The Command Options are as Follows:
+    -help --help /help -? --? /? - will display the help message.
+    -svr    - FQDN of the server for the alert
+    -msg    - Alert detail to be displayed
+    -level  - 1, 2 4 (critical, Warning, Informational)
+    -eventNumber - 8100 for testing
+    -type   - is the server type.  Valid: Node, Windows, Unix, NetApp.  Default or incorrect is Node
+
+ *the parameters are case sensitive.
