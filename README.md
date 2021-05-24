@@ -55,7 +55,19 @@ The Command Options are as Follows:
     -msg    - Alert detail to be displayed
     -level  - 1, 2 4 (critical, Warning, Informational)
     -eventNumber - 8100 for testing
-    -type   - is the server type.  Valid: Node, Windows, Unix, NetApp.  Default or incorrect is Node
+    -type   - is the server type.  Valid: Node, Windows, Unix.  Default or incorrect is Node
 
  *the parameters are case sensitive.
 ```
+
+## Visual Studio Code
+
+Program.cs is the C# code used to create the application.
+
+I have included the the full VS code that was used to create this application.  The folder SCOMalertsVScode contains the code.  Simply download this folder to your VS repo and run the sln file to load he program.  You may need to point the referense to the dll's in the SCOMalerts\bin folder.  There a 4 standard SCOM dll's that should be installed if you have setup VSAE.  CommandLine.Utility.dll and CryptPassword.dll are libraries I created to assist this program.  I use this in other programs, that is why I made them libraries.
+
+## Management Pack to Alerts
+
+In order to turn the vent into an alert, the event must have a rule to detect the event and generate an alert.  This MP takes advantage of this built-in functionality within SCOM.  In the MP folder there is a Custom.Event.Alert.xml file that is a self contained management pack.  Simply add this management pack to SCOM and check out the preconfigured rules.
+
+I have also included 3 management pack fragments for different node types.  The application contains a parameter type.  This type is used for the types of objects.  The 3 types I have configured as Node, Windows, and Unix.  Each fragment is designed to work with a specific object type.
