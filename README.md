@@ -20,7 +20,7 @@ The first thing to do is create a password for the SCOM account used for the eve
   
 Next open the SCOMalerts.exe.config for editing.  This file containes the following information
 ```dos
-		key="SCOMuser" value="scom.admin.user"
+		key="SCOMuser" value="scom_admin_user"
 		key="SCOMpasswd" value="password.file"
 		key="SCOMserver" value="scomserver.domain.org"
 		key="Domain" value="domain.org"
