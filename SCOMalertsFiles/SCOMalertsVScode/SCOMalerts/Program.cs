@@ -153,6 +153,18 @@ namespace SCOMalerts
                                 targets.AddRange(reader);
                                 loghandle.WriteOut("Retrieved Node Targets in SCOM");
                             }
+                            if (ObjType == "NetApp")
+                            {
+                                // Get all instances of network nodes from the management group
+                                ManagementPackClassCriteria NetClassCriteria = new ManagementPackClassCriteria("Name = 'WSH.NETAPP.Volume.Class'");
+                                IList<ManagementPackClass> monitoringClasses = mg.EntityTypes.GetClasses(NetClassCriteria);
+                                if (monitoringClasses.Count != 1)
+                                    throw new InvalidOperationException("Expected one monitoring class object for WSH.NETAPP.Volume.Class");
+                                //List<MonitoringObject> targets = new List<MonitoringObject>();
+                                IObjectReader<MonitoringObject> reader = mg.EntityObjects.GetObjectReader<MonitoringObject>(monitoringClasses[0], ObjectQueryOptions.Default);
+                                targets.AddRange(reader);
+                                loghandle.WriteOut("Retrieved Node Targets in SCOM");
+                            }
 
                             int MOIndex = 0;
                             if (targets.Count > 0)
@@ -269,7 +281,7 @@ namespace SCOMalerts
             int Level = int.Parse(MainArgs["level"]);
             int EventNumber = int.Parse(MainArgs["eventNumber"]);
             string Type = MainArgs["type"];
-            if (Type == "Windows" || Type == "Unix" || Type == "Node")
+            if (Type == "Windows" || Type == "Unix" || Type == "Node" || Type == "NetApp")
             {
                 loghandle.WriteOut("Found a valid node type: "+Type);
             } else
@@ -305,7 +317,7 @@ The Command Options are as Follows:
     -msg    - Alert detail to be displayed
     -level  - 1, 2 4 (critical, Warning, Informational)
     -eventNumber - 8100 for testing
-    -type   - is the server type.  Valid: Node, Windows, Unix.  Default or incorrect is Node
+    -type   - is the server type.  Valid: Node, Windows, Unix.  Default or incorrect is Node (Network Node)
 
  *the parameters are case sensitive.
             ";
