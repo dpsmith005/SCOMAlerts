@@ -51,7 +51,7 @@
 	</Manifest>
 	<Monitoring>
 		<Rules>
-			<Rule ID="Custom.AlertOnEventForComputer8100" Comment="&lt;Silect&gt;&lt;Op&gt;Edited&lt;/Op&gt;&lt;User&gt;YHSMASTER\dsmith14admin&lt;/User&gt;&lt;Previous&gt;Enabled=false&lt;/Previous&gt;&lt;LastModified&gt;2021-05-18 17:43:50Z&lt;/LastModified&gt;&lt;/Silect&gt;" Enabled="true" Target="Windows!Microsoft.Windows.Computer" ConfirmDelivery="false" Remotable="true" Priority="Normal" DiscardLevel="100">
+			<Rule ID="Custom.AlertOnEventForComputer8100" Enabled="true" Target="Windows!Microsoft.Windows.Computer" ConfirmDelivery="false" Remotable="true" Priority="Normal" DiscardLevel="100">
 				<Category>Alert</Category>
 				<DataSources>
 					<DataSource ID="DataSource" TypeID="SCLibrary!Microsoft.SystemCenter.SdkEventProvider" />
