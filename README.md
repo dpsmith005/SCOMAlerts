@@ -70,6 +70,6 @@ I have included the the full VS code that was used to create this application.  
 
 In order to turn the vent into an alert, the event must have a rule to detect the event and generate an alert.  This MP takes advantage of this built-in functionality within SCOM.  In the MP folder there is a Custom.Event.Alert.xml file that is a self contained management pack.  Simply add this management pack to SCOM and check out the preconfigured rules.
 
-I have also included 3 management pack fragments for different node types.  The application contains a parameter type.  This type is used for the types of objects.  The 3 types I have configured as Node, Windows, and Unix.  Each fragment is designed to work with a specific object type.
+I have also included 3 management pack fragments for different node types.  The application contains a parameter type.  This type is used for the types of objects.  The 3 types I have configured as Node, Windows, and Unix.  Node is a network node type, not a cluster node.  Each fragment is designed to work with a specific object type.
 
 ### return to website https://dpsmith005.github.io/
