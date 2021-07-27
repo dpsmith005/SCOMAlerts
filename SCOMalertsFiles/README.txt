@@ -23,7 +23,7 @@ The Command Options are as Follows:
     -msg    - Alert detail to be displayed
     -level  - 1, 2 4 (critical, Warning, Informational)
     -eventNumber - 8100 for testing
-    -type   - is the server type.  Valid: Node, Windows, Unix, NetApp.  Default or incorrect is Node
+    -type   - is the server type.  Valid: Node, Windows, Unix.  Default or incorrect is Node (network Node)
 
  *the parameters are case sensitive.
 
