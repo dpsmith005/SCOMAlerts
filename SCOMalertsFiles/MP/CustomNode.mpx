@@ -10,6 +10,8 @@ LastModified: 18-May-2021
 
 In this fragment you need to replace:
 ##ClassID## Network!System.NetworkManagement.Node
+##EVENTID## 8100
+##RULEID## Custom.AlertOnEventForNode
 
 This fragment depends on references:
   RequiredReference: Alias="System", ID="System.Library", Version="7.5.8501.0"
@@ -19,7 +21,7 @@ This fragment depends on references:
 -->
   <Monitoring>
     <Rules>
-      <Rule ID="Custom.AlertOnEventForNode8100"
+      <Rule ID="##RULEID##.##EVENTID##"
           Enabled="true"
           Target="##ClassID##"
           ConfirmDelivery="false"
@@ -51,7 +53,7 @@ This fragment depends on references:
                   </ValueExpression>
                   <Operator>Equal</Operator>
                   <ValueExpression>
-                    <Value Type="String">8100</Value>
+                    <Value Type="String">##EVENTID##</Value>
                   </ValueExpression>
                 </SimpleExpression>
               </Expression>
@@ -63,8 +65,8 @@ This fragment depends on references:
               TypeID="Health!System.Health.GenerateAlert">
             <Priority>0</Priority>
             <Severity>0</Severity>
-            <AlertOwner>8100</AlertOwner>
-            <AlertMessageId>$MPElement[Name="AlertMessageID_Node_8100"]$</AlertMessageId>
+            <AlertOwner>##EVENTID##</AlertOwner>
+            <AlertMessageId>$MPElement[Name="AlertMessageID_Node_##EVENTID##"]$</AlertMessageId>
             <AlertParameters>
               <AlertParameter1>$Data/EventDescription$</AlertParameter1>
             </AlertParameters>
@@ -75,29 +77,29 @@ This fragment depends on references:
   </Monitoring>
   <Presentation>
     <StringResources>
-      <StringResource ID="AlertMessageID_Node_8100" />
+      <StringResource ID="AlertMessageID_Node_##EVENTID##" />
     </StringResources>
   </Presentation>
   <LanguagePacks>
     <LanguagePack ID="ENU">
       <DisplayStrings>
-        <DisplayString ElementID="AlertMessageID_Node_8100">
+        <DisplayString ElementID="AlertMessageID_Node_##EVENTID##">
           <Name>Info ScomAlert via SDK event</Name>
           <Description>{0}</Description>
         </DisplayString>
-        <DisplayString ElementID="Custom.AlertOnEventForNode8100">
-          <Name>Custom.AlertOnEventForNode 8100</Name>
-          <Description>PublisherName: Custom.Alert   EventNumber : 8100    Level: 3 Information</Description>
+        <DisplayString ElementID="##RULEID##.##EVENTID##">
+          <Name>##RULEID## ##EVENTID##</Name>
+          <Description>PublisherName: Custom.Alert   EventNumber : ##EVENTID##    Level: 3 Information</Description>
         </DisplayString>
-        <DisplayString ElementID="Custom.AlertOnEventForNode8100"
+        <DisplayString ElementID="##RULEID##.##EVENTID##"
             SubElementID="ConditionDetection">
           <Name>ConditionDetection</Name>
         </DisplayString>
-        <DisplayString ElementID="Custom.AlertOnEventForNode8100"
+        <DisplayString ElementID="##RULEID##.##EVENTID##"
             SubElementID="DataSource">
           <Name>Target Entity SDK Event Data Provider</Name>
         </DisplayString>
-        <DisplayString ElementID="Custom.AlertOnEventForNode8100"
+        <DisplayString ElementID="##RULEID####EVENTID##"
             SubElementID="WriteAction">
           <Name>WriteAction</Name>
         </DisplayString>
