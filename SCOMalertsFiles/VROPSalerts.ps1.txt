@@ -1,0 +1,334 @@
+﻿<#
+.Synopsis
+   VROPSalerts.ps1 gathers alerts from VROPS via REST API
+.DESCRIPTION
+   This script will poll the VROPS server using the REST API.  It gathers the alerts and supporting information.  
+   The supporting information is for translating id to actual text details.
+.EXAMPLE
+   VROPSalerts.ps1
+.INPUTS
+   None
+.OUTPUTS
+   debugging and loginf data is stored to a log file
+.NOTES
+   Written by David Smith 1 September, 2020
+#>
+
+#############
+# Functions #
+#############
+function Write-LogFile ($msg) {
+    $dt = get-date
+    Add-Content -Path "$LOGFILE" -Value "$dt : $UID : $msg" -Encoding ascii
+    [Console]::Out.Flush()
+    if ($DEBUG) {Write-Host $msg}
+}
+
+#############
+# Variables #
+#############
+$DEBUG = $true
+$RunUser = whoami
+$hostname = hostname
+$FOLDER = "\\$hostname\e$\scripts\Scomalert"
+$LOGFILE = $FOLDER + "\VROPSLogFile.txt"
+$CSVFILE = $FOLDER + "\VROPS-SCOM-Events.csv"
+$DateTimeStampFile = $FOLDER + "\VROPSDateTimeStamp.txt"
+$UID = [string]([guid]::NewGuid()) -replace "-", ""     # New-Guid will work -- (new-guid).Guid -replace "-",""
+
+Set-Location E:\scripts\Scomalert
+# TLS 1.2
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
+################################################
+# Configure the variables below for vROPs
+################################################
+$vROPsServer = "VROPSserver.domain.net"
+$cred = Import-Clixml encryptedCredentialsFile
+$vROPSUser = $cred.username;
+$vROPsPassword = $cred.GetNetworkCredential().password
+################################################
+
+#######################################################
+# Adding certificate exception to prevent API errors
+#######################################################
+add-type @"
+    using System.Net;
+    using System.Security.Cryptography.X509Certificates;
+    public class TrustAllCertsPolicy : ICertificatePolicy {
+        public bool CheckValidationResult(
+            ServicePoint srvPoint, X509Certificate certificate,
+            WebRequest request, int certificateProblem) {
+            return true;
+        }
+    }
+"@
+[System.Net.ServicePointManager]::CertificatePolicy = New-Object TrustAllCertsPolicy
+
+################################################
+# Building vROPS API string & invoking REST API
+################################################
+$BaseURL = "https://" + $vROPsServer + "/suite-api/api/"
+$BaseAuthURL = "https://" + $vROPsServer + "/suite-api/api/auth/token/acquire"
+$Type = "application/json"
+# Creating JSON for Auth Body
+$AuthJSON =
+"{
+  ""username"": ""$vROPSUser"",
+  ""password"": ""$vROPsPassword""
+}"
+# Authenticating with API
+Try 
+{
+    Write-LogFile "$hostname Connecting to $vROPsServer as $RunUser..."
+    $vROPSSessionResponse = Invoke-RestMethod -Method POST -Uri $BaseAuthURL -Body $AuthJSON -ContentType $Type
+	Write-LogFile "Error connecting to $vROPsServer $Msg"
+}
+Catch 
+{
+    $_.Exception.ToString()
+    $Msg = $error[0] | Format-List -Force | Out-String
+    Write-LogFile $Msg
+
+}
+# Extracting the session ID from the response
+$vROPSSessionHeader = @{"Authorization"="vRealizeOpsToken "+$vROPSSessionResponse.'auth-token'.token "Accept"="application/json"}
+Write-LogFile "The vROPS Session header is: $($vROPSSessionHeader | Out-String)"
+
+# EPOCH date & Current date/time
+$epoch = Get-Date 01.01.1970
+$CurrentDateTimeStamp = Get-Date   # To be used as date for all matching and stored in a file
+# Time zone details
+$strCurrentTimeZone = (Get-WmiObject win32_timezone).StandardName
+$TZ = [System.TimeZoneInfo]::FindSystemTimeZoneById($strCurrentTimeZone)
+# [System.TimeZoneInfo]::ConvertTimeFromUtc($StartTimeUTC, $TZ) 
+
+# create a file to store the date time as a pointer to limit to alerts newer than this date time
+if (Test-Path $DateTimeStampFile) {
+    $DateTimeStamp = get-date (Get-Content $DateTimeStampFile)
+} else {
+    $DateTimeStamp = $CurrentDateTimeStamp
+}
+
+#Current datetime to unix number (milliseconds) 
+$EndMs = [math]::Round([decimal](get-date $CurrentDateTimeStamp.ToUniversalTime() -UFormat %s) *1000)
+
+# most recent alerts poll date/time (milliseconds)
+$StartMs = [math]::Round([decimal](get-date $datetimestamp.ToUniversalTime() -uformat %s)*1000)
+
+Write-LogFile "  UTC Times : Start: $($datetimestamp.ToUniversalTime())   End: $($CurrentDateTimeStamp.ToUniversalTime())"
+Write-LogFile "LOCAL Times : Start: $($datetimestamp)   End: $($CurrentDateTimeStamp)"
+Write-LogFile "Beginning VROPS alerts collection.  Start Time: $StartMs    End Time: $EndMs"
+
+# Gather the alerts from VROPS
+try {
+
+    $URI = "https://$vROPsServer/suite-api/api/alerts/query?pageSize=10000"
+    #$body = @{"startTimeRange"=@{"startTime"=$StartMs;"endTime"=$EndMs}} | ConvertTo-Json
+    $BodyQ = @"
+{
+  "alertControlState": ["OPEN"],
+  "alertStatus" : ["NEW", "ACTIVE" ],
+  "alertCriticality" : [ "CRITICAL", "IMMEDIATE" ],
+  "alertImpact" : [ "HEALTH" ],
+  "startTimeRange" : {
+    "startTime" : $StartMS,
+    "endTime" : $EndMS
+  }
+}
+"@
+    Write-LogFile "Beginning REST query to $($URI)"
+    $msg = (($bodyQ|ConvertFrom-Json)|Out-String).Trim() -replace "`r`n",'; '; $msg
+    Write-LogFile "Query parameters: $msg"
+    $AlertsJson = Invoke-RestMethod -Method Post -Uri $URI -body $BodyQ -Headers $vROPSSessionHeader -ContentType $Type
+    $Alerts = $AlertsJson.alerts
+}
+Catch  {
+    $_.Exception.ToString()
+    $Msg = $error[0] | Format-List -Force | Out-String
+    Write-LogFile "ERROR gathering alerts"
+    Write-LogFile $Msg
+}
+
+# Gather the Custom Group and get the members
+$customGroup = 'Custom - Notification Group'
+$URI = "https://$vROPsServer/suite-api/api/resources/groups"
+$Groups = Invoke-RestMethod -Method Get -Uri $URI -Headers $vROPSSessionHeader -ContentType $Type
+$GroupId = ($Groups.groups | ?{$_.resourceKey.name -eq "$customGroup"}).id
+$URI = "https://$vROPsServer/suite-api/api/resources/groups/$GroupId/members"
+$Members = Invoke-RestMethod -Method Get -Uri $URI -Headers $vROPSSessionHeader -ContentType $Type
+$MemberList = $Members.resourcelist.resourceKey.name
+
+# Gather all alert types and sub types
+try {
+    $URI = "https://$vROPsServer/suite-api/api/alerts/types?ignoreLegacy=false"
+    $SubTypes = Invoke-RestMethod -Method Get -Uri $URI -Headers $vROPSSessionHeader -ContentType $Type
+    Write-LogFile "Gathered the Type and subType information"
+    # Alert Types and sub types (shorter list)
+    #$URI = "https://$vROPsServer/suite-api/api/alerts/types?pageSize=10000"
+    #$Types = Invoke-RestMethod -Method Get -Uri $URI -Headers $vROPSSessionHeader -ContentType $Type
+}
+Catch  {
+    $_.Exception.ToString()
+    $Msg = $error[0] | Format-List -Force | Out-String
+    Write-LogFile "ERROR gathering notifications"
+    Write-LogFile $Msg
+}
+$hashTypes=@{}
+$hashSubTypes=@{}
+foreach ($t in $Subtypes.alertTypes) {
+   $hashTypes.Add($t.id , $t.Name)
+   $hashSubTypes[$t.id] = @{}
+   foreach ($s in $t.subTypes) {
+       $hashSubTypes[$t.id][$s.id] = $s.Name
+   }
+}
+
+class AlertInfo {
+    [string]$alertLevel
+    [string]$type
+    [string]$subType
+    [string]$status
+    [string]$resource
+    [string]$resourceKindKey
+    [string]$adapterKindKey
+    [datetime]$startTimeUTC
+    [datetime]$startTimeLocal
+    #[datetime]$cancelTimeUTC
+    [datetime]$updateTimeUTC
+    [datetime]$updateTimeLocal
+    [string]$controlState
+    [string]$alertDefinitionName
+    [string]$alertDefinitionId
+    [string]$alertImpact
+    [datetime]$DateTimeStamp
+    [string]$AlertId
+    [string]$alertDefinitionHref
+    [string]$AlertDefName
+    [string]$AlertDefDesc
+}
+
+
+# Process the alerts
+Write-LogFile "Processing alerts $($Alerts.Count)"
+$ArrAlerts = @()
+#foreach ($alert in ($Alerts | ?{$_.status -eq "ACTIVE"} | sort startTimeUtc -descending)) {
+foreach ($alert in ($Alerts |  sort startTimeUtc -descending)) {
+    $StartTimeUTC = $epoch+([system.timespan]::FromMilliseconds($alert.startTimeUTC))
+    #if ( $StartTimeUTC -ge $DateTimeStamp.ToUniversalTime() ) {
+        $AI=[AlertInfo]::new()
+        $AI.alertLevel = $alert.alertLevel
+        $AI.type =  $hashTypes[[int]$alert.type]
+        $AI.subType = $hashSubTypes[[int]$alert.type][[int]$alert.subType]
+        $AI.status = $alert.status
+        $AI.startTimeUTC = $StartTimeUTC
+        $AI.startTimeLocal = [System.TimeZoneInfo]::ConvertTimeFromUtc($StartTimeUTC, $TZ) 
+        
+        if ($alert.updateTimeUTC -ne 0) {
+            $AI.updateTimeUTC = $epoch + ([system.timespan]::FromMilliseconds($alert.updateTimeUTC))
+            $AI.updateTimeLocal = [System.TimeZoneInfo]::ConvertTimeFromUtc($AI.updateTimeUTC, $TZ) 
+        }
+        $AI.controlState = $alert.controlState
+        $AI.alertDefinitionName = $alert.alertDefinitionName
+        $AI.alertDefinitionId = $alert.alertDefinitionId
+        $AI.alertImpact = $alert.alertImpact
+        $URI = "https://$vROPsServer" + ($alert.links|?{$_.name -eq "AlertOnResource"}).href 
+        $x = Invoke-RestMethod -Method Get -Uri $URI  -Headers $vROPSSessionHeader -ContentType $Type 
+        $AI.resourceKindKey = $x.resourcekey.resourceKindKey
+        $AI.adapterKindKey = $x.resourcekey.adapterKindKey
+        $AI.resource = $x.resourceKey.name
+        $AI.DateTimeStamp = $CurrentDateTimeStamp
+        $AI.AlertId = $alert.alertId
+        $AI.alertDefinitionHref = $URI = "https://$vROPsServer" + ($alert.links | ?{$_.name -eq "problemDefinitionForAlert" }).href
+        $URI = $AI.alertDefinitionHref
+        $data = Invoke-RestMethod -Method Get -Uri $URI -Headers $vROPSSessionHeader -ContentType $Type
+        $AI.AlertDefName = $data.Name
+        $AI.AlertDefDesc = $data.description
+
+
+        $ArrAlerts += $AI
+    #}
+}
+Write-LogFile "Finished processing alerts $($arrAlerts.Count)"
+
+##### Filter on the following #####
+Write-LogFile "Processing alerts based on Member List for Custom Group '$customGroup' from VROPS"
+foreach ($alert in $arralerts) 
+{
+    #foreach ($rule in ($Notifications|?{$_.Name -match "^SCOMalert"}))    {
+
+    # Compare the select alerts to those in the member list
+    if ($MemberList -contains $alert.resource) {
+        Write-LogFile "Found matching alert:"
+        Write-LogFile "$($Alert|Out-String)"
+        $TEST=$Alert  # Testing - to store and alert for command line processing and testing
+
+        # Setup details for Notes GET and POST
+        $URI3 = "https://$vROPsServer/suite-api/api/alerts/$($alert.alertId)/notes"
+        $Body3 = @{"content"= "SCOM Event created"} | ConvertTo-Json
+
+        # Get the Notes for this alert and test for 'SCOM Event created'
+        $Notes = Invoke-RestMethod -Method GET -Uri $URI3 -Headers $vROPSSessionHeader -ContentType $Type
+        if ($Notes.alertNotes.note -contains "SCOM Event created") {
+            Write-LogFile "SCOM Event previously created for this alert $($alert.resource) $($alert.alertDefinitionName)"       # $($alert|Out-String)"
+            # check if there are notes then create the note - $Notes.pageInfo.totalCount -eq 0  ### May need this before checking value
+        } else {
+            # Output the Alerts to a csv file
+            $Alert | export-csv $CSVFILE -notypeinformation -append
+            Write-LogFile "Alert stored to CSV file : $($CSVFILE)"
+
+            #Create SCOM event and add VROPS note to the VROPS alert
+            #$Msg = "alertLevel:$($alert.alertlevel),resource:$($alert.resource),resourceKind:$($alert.resourceKindKey),startTime:$($alert.startTimeLocal),name:$($alert.alertDefinitionName)"
+            $Msg = "Alert Level : $($alert.alertlevel)`r`nResource : $($alert.resource)`r`nResource Type : $($alert.resourceKindKey)`r`nStart Time : $($alert.startTimeLocal)`r`nName : $($alert.alertDefinitionName)`r`nDescription : $($alert.AlertDefDesc)`r`nLevel : "
+            
+            # Pick the appropriate level and append to $Msg  ($Msg += "#"
+            $Cmd =  $FOLDER + '\scomalerts.exe'
+            if ($alert.alertlevel -eq "CRITICAL") {
+                $Msg += "1"
+                $Output = & $Cmd -svr $vROPsServer -eventNumber 8101 -level 1 -msg "$Msg"
+            } elseif ($alert.alertlevel -eq "IMMEDIATE") {
+                $Msg += "4"
+                $Output = & $Cmd -svr $vROPsServer -eventNumber 8104 -level 4 -msg "$Msg"
+            } else {
+                $Msg += "5"
+                $Output = & $Cmd -svr $vROPsServer -eventNumber 8105 -level 5 -msg "$Msg"
+            }
+            
+            Write-LogFile "Output from scomalerts.exe: $($OutPut|Out-String)"
+            #& $Cmd -svr $vROPsServer -eventNumber 8104 -level 2 -msg "$Msg"
+            #& $Cmd -svr $vROPsServer -eventNumber 8102 -level 2 -msg "$Msg"
+            #& $Cmd -svr $vROPsServer -eventNumber 8101 -level 1 -msg "$Msg"
+            Write-LogFile "Event sent to SCOM : $($Msg)"
+            $NoteAdd = Invoke-RestMethod -Method Post -Uri $URI3 -body $body3 -Headers $vROPSSessionHeader -ContentType $Type
+            #verify the contens of $NoteAdd
+            if ($NoteAdd.note -ne "SCOM Event created") {
+                Write-LogFile "Note add failed.  Try again"
+                $NoteAdd2 = Invoke-RestMethod -Method Post -Uri $URI3 -body $body3 -Headers $vROPSSessionHeader -ContentType $Type
+                if ($NoteAdd2.note -ne "SCOM Event created") {
+                    Write-LogFile "Failed on second attempt to add note to VROPS.  Duplicate SCOM alert is possible"
+                } else {
+                    Write-LogFile "Success on second attempt to add note to alert in VROPS"
+                }
+            } else {
+                Write-LogFile "Note added to alert in VROPS"
+            }
+        }
+     }
+    #}
+} 
+
+# Update the DateTimeStampFile to the current date time
+get-date $CurrentDateTimeStamp.AddMinutes(-1) -Format G | Out-File -FilePath $DateTimeStampFile
+Write-LogFile "Setting date time stamp value in file to : $($CurrentDateTimeStamp.AddMinutes(-5))"
+
+$URI = "https://$vROPsServer/suite-api/api/auth/token/release"
+Invoke-RestMethod -Method Post -Uri $URI -Headers $vROPSSessionHeader -ContentType $Type
+
+# Log File rotate
+$dt=Get-Date
+$LogFileCreateTime = (Get-childItem $LOGFILE).CreationTime
+$AgeDateTime = ((get-date).AddDays(-30))
+if ($LogFileCreateTime -lt $AgeDateTime) {
+    Move-Item $LOGFILE "\\$hostname\e$\scripts\Scomalert\VROPSLogFile0.txt" -Force
+    Write-LogFile "Moving file Test.  Time is $dt (Age: $AgeDateTime)  Log File Create Time: $LogFileCreateTime"
+} else {"not moving file"}
